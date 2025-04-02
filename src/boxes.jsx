@@ -5,7 +5,7 @@ const Boxes = () => {
     const [data, setData] = useState([]);
     
     useEffect(() => {
-        fetch("http://api.mediastack.com/v1/news?access_key=9471d7cad40db446ce6e59cd2424d847")
+        fetch("your api key of https://mediastack.com/dashboard")
         .then((response) => response.json())
         .then((data) => {
             setData(data.data);
