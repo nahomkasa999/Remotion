@@ -5,9 +5,7 @@ import Boxes from "./boxes";
 const Complied = () => {
   return (
     <>
-      {" "}
-
-      <Boxes />
+    <Boxes/>
     </>
   );
 };

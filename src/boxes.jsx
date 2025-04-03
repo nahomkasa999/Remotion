@@ -1,141 +1,89 @@
-import { AbsoluteFill } from "remotion";
+import { AbsoluteFill, Img, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { useEffect, useState } from "react";
 
 const Boxes = () => {
-    const [data, setData] = useState([]);
-    
-    useEffect(() => {
-        fetch("your api key of https://mediastack.com/dashboard")
-        .then((response) => response.json())
-        .then((data) => {
-            setData(data.data);
-            console.log(data.data);
-        });
-    }, []);
-    
-    return (
-        <AbsoluteFill
-            style={{
-                padding: "20px",
-                fontFamily: "Arial, sans-serif",
-                backgroundImage: data[0]?.image ? `url(${data[0].image})` : "none",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                textAlign: "center",
-                color: "white", // For readability against images
-                boxSizing: "border-box",
-                overflow: "hidden",
-            }}
+  const [data, setData] = useState([]);
+  const [index, setIndex] = useState(0);
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  useEffect(() => {
+    fetch("http://api.mediastack.com/v1/news?access_key=9471d7cad40db446ce6e59cd2424d847&countries=us&languages=en")
+      .then((response) => response.json())
+      .then((data) => {
+        const filteredData = data.data.filter((item) => item.image);
+        setData(filteredData);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (data.length > 0) {
+      const interval = setInterval(() => {
+        setIndex((prevIndex) => (prevIndex + 1) % data.length);
+      }, 10000); // Change slide every 10 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [data]);
+
+  if (data.length === 0) return null;
+
+  const currentNews = data[index];
+
+  const fadeIn = interpolate(frame % (fps * 10), [0, fps * 2], [0, 1], {
+    extrapolateRight: "clamp",
+  });
+
+  const slideIn = interpolate(frame % (fps * 10), [0, fps * 2], [100, 0], {
+    extrapolateRight: "clamp",
+  });
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: "black", display: "flex", justifyContent: "center", alignItems: "center" }}>
+      <Img
+        src={currentNews.image}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          opacity: 0.8,
+          transform: `scale(${1 + fadeIn * 0.1})`,
+        }}
+      />
+      <AbsoluteFill
+        style={{
+          backgroundColor: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          textAlign: "center",
+        }}
+      >
+        <h1
+          style={{
+            color: "white",
+            fontSize: 80,
+            fontWeight: "bold",
+            opacity: fadeIn,
+            transform: `translateY(${slideIn}px)`,
+          }}
         >
-            {data[0] && (
-                <div
-                    style={{
-                        maxWidth: "90%",
-                        backgroundColor: "rgba(0, 0, 0, 0.6)", // Transparent black background for better readability
-                        padding: "20px",
-                        borderRadius: "15px",
-                        boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.5)",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <h1
-                        style={{
-                            fontSize: "24px",
-                            fontWeight: "bold",
-                            marginBottom: "10px",
-                            textShadow: "2px 2px 5px rgba(0, 0, 0, 0.7)",
-                        }}
-                    >
-                        {data[0].title}
-                    </h1>
-                    <p
-                        style={{
-                            fontSize: "16px",
-                            marginBottom: "5px",
-                            fontWeight: "bold",
-                        }}
-                    >
-                        <strong>Author:</strong> {data[0].author || "Unknown"}
-                    </p>
-                    <p
-                        style={{
-                            fontSize: "16px",
-                            marginBottom: "5px",
-                            fontWeight: "bold",
-                        }}
-                    >
-                        <strong>Category:</strong> {data[0].category}
-                    </p>
-                    <p
-                        style={{
-                            fontSize: "16px",
-                            marginBottom: "5px",
-                            fontWeight: "bold",
-                        }}
-                    >
-                        <strong>Country:</strong> {data[0].country}
-                    </p>
-                    <p
-                        style={{
-                            fontSize: "16px",
-                            marginBottom: "10px",
-                            lineHeight: "1.4",
-                        }}
-                    >
-                        <strong>Description:</strong> {data[0].description}
-                    </p>
-                    <img
-                        src={data[0].image}
-                        alt={data[0].title}
-                        style={{
-                            maxWidth: "100%",
-                            height: "auto",
-                            borderRadius: "8px",
-                            marginBottom: "15px",
-                            boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.5)",
-                        }}
-                    />
-                    <p
-                        style={{
-                            fontSize: "16px",
-                            marginBottom: "10px",
-                            fontWeight: "bold",
-                        }}
-                    >
-                        <strong>Language:</strong> {data[0].language}
-                    </p>
-                    <p
-                        style={{
-                            fontSize: "16px",
-                            marginBottom: "15px",
-                            fontWeight: "bold",
-                        }}
-                    >
-                        <strong>Published At:</strong> {new Date(data[0].published_at).toLocaleString()}
-                    </p>
-                    <a
-                        href={data[0].url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                            color: "#00aaff",
-                            textDecoration: "underline",
-                            fontWeight: "bold",
-                        }}
-                    >
-                        Read more
-                    </a>
-                </div>
-            )}
-        </AbsoluteFill>
-    );
+          {currentNews.title}
+        </h1>
+        <h2
+          style={{
+            color: "white",
+            fontSize: 40,
+            opacity: fadeIn,
+            transform: `translateY(${slideIn}px)`,
+          }}
+        >
+          {currentNews.description}
+        </h2>
+      </AbsoluteFill>
+    </AbsoluteFill>
+  );
 };
 
 export default Boxes;
